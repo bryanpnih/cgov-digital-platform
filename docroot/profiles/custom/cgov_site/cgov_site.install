@@ -5,18 +5,73 @@
  * Install, update and uninstall functions for the cgov_site.
  */
 
- /**
-  * Implements hook_install().
-  *
-  * Perform actions to set up the site for this profile.
-  *
-  * @see system_install()
-  */
+use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\locale\Gettext;
+
+/**
+ * Implements hook_install().
+ *
+ * Perform actions to set up the site for this profile.
+ *
+ * @see system_install()
+ */
 function cgov_site_install() {
   // Get our helper.
   $siteHelper = \Drupal::service('cgov_core.tools');
 
   // Install proper language negotiation even if English only.
   $siteHelper->installLanguageNegotiation();
+
+  // Install spanish. Maybe should be in siteHelper, but needs to pull
+  // in translation which I am keeping at the profile level.
+  _install_spanish_and_translations();
+
+}
+
+/**
+ * Helper method to install spanish language and profile .po file.
+ *
+ * This is being done this way due to Drupal issue 3023076.
+ * Alternatively we maybe could make custom installer interface.
+ */
+function _install_spanish_and_translations() {
+  // Enable Spanish.
+  $lang = ConfigurableLanguage::createFromLangcode('es');
+  $lang->save();
+
+  // Pull in relevant locale "API" pieces.
+  module_load_include('compare.inc', 'locale');
+
+  // Force locale to check that our xlation needs to be imported.
+  // From locale.compare.inc.
+  locale_translation_check_projects_local(['cgov_site'], ['es']);
+
+  // Get the project info to get the xlation file info.
+  $projects = locale_translation_get_status(['cgov_site'], ['es']);
+  if ($projects['cgov_site'] && $projects['cgov_site']['es']) {
+    $source = $projects['cgov_site']['es'];
+
+    // Read the translations into the DB.
+    // TODO: Use result of this below to print what was done.
+    Gettext::fileToDatabase(
+      $source->files['local'],
+      [
+        // Start at beginning.
+        'seek' => 0,
+        // Read all.
+        'items' => -1,
+        // These next to are based on locale settings.
+        // Just hardcoding for now, not checking config.
+        'customized' => LOCALE_NOT_CUSTOMIZED,
+        'overwrite_options' => [
+          'not_customized' => TRUE,
+          'customized' => FALSE,
+        ],
+      ]
+    );
+
+    // Update the project status.
+    locale_translation_check_projects_local(['cgov_site'], ['es']);
+  }
 
 }
