@@ -13,5 +13,31 @@
     </div>
     {# TODO: Article footer stuff has to go somewhere. TBD. #}
     <footer class="article-footer">
+      {# Begin Date Placeholder #}
+      {# The context used with trans is because some of the labels are translated differently
+         in core.
+      #}
+      {% set posted_date = node.field_date_posted.value|date('U')|format_date('cgov_display_date') %}
+      {% set updated_date = node.field_date_updated.value|date('U')|format_date('cgov_display_date') %}
+      {% set reviewed_date = node.field_date_reviewed.value|date('U')|format_date('cgov_display_date') %}
+      <div id="cgvDate">
+        <div class="document-dates horizontal">
+          <ul class="clearfix">
+            <li>
+              <strong>{% trans with {'context': 'CGov UI' } %}Posted{% endtrans %}:</strong>
+              {{ posted_date }}
+            </li>
+            <li>
+              <strong>{% trans with {'context': 'CGov UI' } %}Updated{% endtrans %}:</strong>
+              {{ updated_date }}
+            </li>
+            <li>
+              <strong>{% trans with {'context': 'CGov UI' } %}Reviewed{% endtrans %}:</strong>
+              {{ reviewed_date }}
+            </li>
+          </ul>
+        </div>
+      </div>
+      {# End Date Placeholder #}
     </footer>
 </article>

@@ -58,3 +58,4 @@ themes:
   - cgov_admin
 'interface translation project': cgov_site
 'interface translation server pattern': profiles/custom/cgov_site/translations/%project.%language.po
+keep_english: true
