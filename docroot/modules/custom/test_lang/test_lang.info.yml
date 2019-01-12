@@ -1,0 +1,10 @@
+name: 'Language Testing Module'
+type: module
+package: 'CGov Digital Platform'
+description: 'Module for testing language stuff'
+core: 8.x
+dependencies:
+  - content_moderation
+  - language
+  - content_translation
+  - locale
