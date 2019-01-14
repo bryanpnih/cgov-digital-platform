@@ -36,7 +36,12 @@ install:
   - cgov_media
   - cgov_image
   - cgov_article
+  - cgov_biography
+  - cgov_cthp
+  - cgov_event
+  - cgov_general
   - cgov_home_landing
+  - cgov_institution
   - cgov_content_block
   - cgov_press_release
   # other Core
