@@ -1,0 +1,8 @@
+name: 'CGov Biography'
+type: module
+package: 'CGov Digital Platform'
+description: 'Biography content type'
+core: 8.x
+dependencies:
+  - cgov_core
+  - cgov_image
