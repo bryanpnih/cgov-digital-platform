@@ -1,0 +1,8 @@
+name: 'CGov Institution'
+type: module
+package: 'CGov Digital Platform'
+description: 'Content type primarily for Cancer Centers'
+core: 8.x
+dependencies:
+  - cgov_core
+  - cgov_image
