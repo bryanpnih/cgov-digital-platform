@@ -17,7 +17,7 @@ dependencies:
     - field.field.node.cgov_cancer_research.field_short_title
     - node.type.cgov_cancer_research
   module:
-    - cgov_cancer_research
+    - cgov_cthp
     - options
     - text
     - user
