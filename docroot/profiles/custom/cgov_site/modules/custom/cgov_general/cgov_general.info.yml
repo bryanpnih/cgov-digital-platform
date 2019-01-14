@@ -1,0 +1,8 @@
+name: 'CGov General'
+type: module
+package: 'CGov Digital Platform'
+description: 'Content type for general pages'
+core: 8.x
+dependencies:
+  - cgov_core
+  - cgov_image

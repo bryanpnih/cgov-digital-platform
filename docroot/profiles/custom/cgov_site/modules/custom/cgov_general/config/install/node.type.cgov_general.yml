@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies: {  }
+name: General
+type: cgov_general
+description: 'General (mix of navigational and content pages)'
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: false
