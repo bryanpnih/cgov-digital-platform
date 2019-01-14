@@ -37,6 +37,7 @@ install:
   - cgov_image
   - cgov_article
   - cgov_biography
+  - cgov_blog
   - cgov_cthp
   - cgov_event
   - cgov_general
