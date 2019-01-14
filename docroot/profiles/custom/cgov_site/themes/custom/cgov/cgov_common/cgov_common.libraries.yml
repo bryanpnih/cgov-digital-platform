@@ -21,3 +21,80 @@ article:
   dependencies:
     - core/jquery
     - core/jquery.ui
+
+biography:
+  version: 1.x
+  css:
+    theme:
+      dist/css/Article.css: { preprocess: false }
+  js:
+    dist/js/Article.js: { preprocess: false }
+  dependencies:
+    - core/jquery
+    - core/jquery.ui
+
+blog_post:
+  version: 1.x
+  css:
+    theme:
+      dist/css/Article.css: { preprocess: false }
+  js:
+    dist/js/Article.js: { preprocess: false }
+  dependencies:
+    - core/jquery
+    - core/jquery.ui
+
+cthp:
+  version: 1.x
+  css:
+    theme:
+      dist/css/Article.css: { preprocess: false }
+  js:
+    dist/js/Article.js: { preprocess: false }
+  dependencies:
+    - core/jquery
+    - core/jquery.ui
+
+cancer_research:
+  version: 1.x
+  css:
+    theme:
+      dist/css/Article.css: { preprocess: false }
+  js:
+    dist/js/Article.js: { preprocess: false }
+  dependencies:
+    - core/jquery
+    - core/jquery.ui
+
+event:
+  version: 1.x
+  css:
+    theme:
+      dist/css/Article.css: { preprocess: false }
+  js:
+    dist/js/Article.js: { preprocess: false }
+  dependencies:
+    - core/jquery
+    - core/jquery.ui
+
+general:
+  version: 1.x
+  css:
+    theme:
+      dist/css/Article.css: { preprocess: false }
+  js:
+    dist/js/Article.js: { preprocess: false }
+  dependencies:
+    - core/jquery
+    - core/jquery.ui
+
+institution:
+  version: 1.x
+  css:
+    theme:
+      dist/css/Article.css: { preprocess: false }
+  js:
+    dist/js/Article.js: { preprocess: false }
+  dependencies:
+    - core/jquery
+    - core/jquery.ui
