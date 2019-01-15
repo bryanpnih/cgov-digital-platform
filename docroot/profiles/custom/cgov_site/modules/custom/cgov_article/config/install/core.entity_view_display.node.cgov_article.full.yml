@@ -137,6 +137,13 @@ content:
     third_party_settings: {  }
     type: string
     region: content
+  field_public_use:
+    weight: 15
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    type: list_default
+    region: content
   field_short_title:
     weight: 2
     label: hidden
