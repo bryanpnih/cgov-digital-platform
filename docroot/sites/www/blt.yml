@@ -1,0 +1,18 @@
+project:
+  profile:
+    name: cgov_site
+  local:
+    hostname: www.devbox
+    protocol: http
+  machine_name: www
+  human_name: www
+drush:
+  aliases:
+    local: self
+    remote: www.local
+drupal:
+  db:
+    database: drupal_www
+#    username: drupal
+#    password: drupal
+#    host: db

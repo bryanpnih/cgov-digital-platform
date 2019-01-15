@@ -1,0 +1,9 @@
+project:
+  local:
+    hostname: microsite.devbox
+    protocol: http
+  machine_name: blted8
+drush:
+  aliases:
+    local: self
+    remote: blted8.test

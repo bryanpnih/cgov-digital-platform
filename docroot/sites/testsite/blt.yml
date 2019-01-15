@@ -1,0 +1,14 @@
+project:
+  local:
+    hostname: testsite.devbox
+    protocol: http
+  machine_name: testsite
+  human_name: testsite
+drush:
+  aliases:
+    local: self
+    remote: testsite.local
+drupal:
+  db:
+    database: drupal_testsite
+

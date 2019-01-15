@@ -4,9 +4,7 @@ project:
   human_name: 'BLTed 8'
   profile:
     name: cgov_site
-  local:
-    protocol: http
-    hostname: www.devbox
+  local: {  }
 git:
   default_branch: develop
   remotes:
@@ -16,8 +14,6 @@ git:
     commit-msg: false
 deploy:
   tag_source: true
-cm:
-  strategy: core-only
 drush:
   aliases:
     remote: '${project.machine_name}.test'
@@ -40,6 +36,8 @@ modules:
   prod:
     enable: [acquia_connector, shield]
     uninstall: [devel, views_ui]
+cm:
+  strategy: core-only
 phpunit:
   -
     config: '${repo.root}/phpunit.xml'
@@ -71,3 +69,7 @@ command-hooks:
   post-deploy:
     dir: '${docroot}'
     command: null
+multisites:
+  - default
+  - www
+  - testsite
