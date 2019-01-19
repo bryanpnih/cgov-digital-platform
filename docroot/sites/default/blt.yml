@@ -1,0 +1,9 @@
+project:
+  local:
+    hostname: microsite.devbox
+    protocol: http
+  machine_name: microsite
+drush:
+  aliases:
+    local: self
+    remote: microsite.test

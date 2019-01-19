@@ -1,0 +1,10 @@
+project:
+  local:
+    hostname: www.devbox
+    protocol: http
+  machine_name: www
+  human_name: www
+drush:
+  aliases:
+    local: self
+    remote: www.local

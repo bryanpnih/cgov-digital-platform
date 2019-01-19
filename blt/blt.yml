@@ -1,12 +1,9 @@
 project:
-  machine_name: microsite
   prefix: NCIOCPL
   human_name: 'Cancer.gov Digital Platform Microsite'
   profile:
     name: cgov_site
-  local:
-    protocol: http
-    hostname: microsite.devbox
+  local: {  }
 git:
   default_branch: develop
   remotes:
@@ -20,8 +17,6 @@ cm:
   strategy: core-only
 drush:
   aliases:
-    remote: '${project.machine_name}.test'
-    local: self
     ci: self
   default_alias: '${drush.aliases.local}'
 modules:
@@ -71,3 +66,6 @@ command-hooks:
   post-deploy:
     dir: '${docroot}'
     command: null
+multisites:
+  - default
+  - www
