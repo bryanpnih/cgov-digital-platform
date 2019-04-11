@@ -63,7 +63,7 @@ function cgov_list_paragraph_view(array &$build, EntityInterface $entity, Entity
 
   // Let's handle the field overrides.
   $title = $entity->field_override_title->value;
-  if ($title == NULL) {
+  if ($title != NULL) {
     $build['title'] = $build['field_override_title'];
     $build['title'][0]['#field_name'] = 'title';
   }
