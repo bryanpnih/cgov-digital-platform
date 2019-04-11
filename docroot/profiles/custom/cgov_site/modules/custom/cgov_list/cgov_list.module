@@ -46,23 +46,58 @@ function cgov_list_allowed_values_function(
 /**
  * Implements hook_ENTITY_TYPE_view().
  *
- * This replaces the field_list_items build entry with one that uses
- * the field_list_item_style setting. This allows editors to select
- * which style of rendering as content.
- *
- * This may be better as a field formatter.
+ * See \Drupal\cgov_list\Plugin\Field\FieldFormatter\ListItemFormatter
+ * for the setup for this.
  */
 function cgov_list_paragraph_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
-  if ($entity->bundle() != 'cgov_list') {
+  if ($entity->bundle() != 'cgov_internal_link') {
     return;
   }
 
-  $list_item_mode = $entity->field_list_item_style->value;
+  // Get the entity the link is pointing to, bail if
+  // there is nothing.
+  $link_entity = $entity->field_internal_link->entity;
+  if (!$link_entity) {
+    return;
+  }
 
-  $build['field_list_items'] = $build['field_list_items']['#items']->view([
-    'type' => 'entity_reference_revisions_entity_view',
-    'settings' => [
-      'view_mode' => $list_item_mode,
-    ],
-  ]);
+  // Let's handle the field overrides.
+  $title = $entity->field_override_title->value;
+  if ($title == NULL) {
+    $build['title'] = $build['field_override_title'];
+    $build['title'][0]['#field_name'] = 'title';
+  }
+  else {
+    $build['title'] = $link_entity->field_short_title->view([
+      'type' => 'string',
+    ]);
+    $build['title']['field'] = 'title';
+  }
+  unset($build['field_override_title']);
+
+  // Let's figure out how we are drawing the link. There are
+  // certain cases where we will not render it.
+  $fieldDef = $display->getComponent('field_internal_link');
+  $link_view_mode = $fieldDef['settings']['view_mode'];
+
+  // Remove the link because we are going to handle it.
+  unset($build['field_internal_link']);
+
+  $entityTypeManager = \Drupal::entityTypeManager();
+  $view_builder = $entityTypeManager->getViewBuilder($link_entity->getEntityTypeId());
+  $link_build = $view_builder->view($link_entity, $link_view_mode, $link_entity->language()->getId());
+
+  // Cheat linter.
+  if ($link_build) {
+    return;
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view_alter().
+ */
+function cgov_list_paragraph_view_alter(array &$build, EntityInterface $entity) {
+  if ($entity->bundle() != 'cgov_internal_link') {
+    return;
+  }
 }
