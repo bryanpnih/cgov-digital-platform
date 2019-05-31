@@ -1,0 +1,1 @@
+The cgov_caching_ace and cgov_caching_acsf module should not be installed as part of the profile. It should be enabled on a per tier basis. Mostly this is due to the fact that for a module to be installed in a profile its dependencies need to be in the profile.info.yml. Which means we would load modules we do not want. This should be handled in the blt.yml modules section.

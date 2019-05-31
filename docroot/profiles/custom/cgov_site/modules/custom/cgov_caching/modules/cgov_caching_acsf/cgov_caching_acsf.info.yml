@@ -1,0 +1,13 @@
+name: 'CGov Caching: ACSF'
+type: module
+package: 'CGov Digital Platform'
+description: 'Caching Module for ACSF Environments'
+core: 8.x
+dependencies:
+  - purge
+  - purge_drush
+  - purge_processor_cron
+  - purge_processor_lateruntime
+  - purge_queuer_coretags
+  - purge_ui
+  - acquia_purge
