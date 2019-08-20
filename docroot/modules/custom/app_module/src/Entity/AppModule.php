@@ -28,6 +28,7 @@ use Drupal\app_module\AppModuleInterface;
  *   config_export = {
  *     "id",
  *     "label",
+ *     "path_validator",
  *   },
  *   links = {
  *     "edit-form" = "/admin/config/system/app_module/{app_module}",
@@ -42,13 +43,37 @@ class AppModule extends ConfigEntityBase implements AppModuleInterface {
    *
    * @var string
    */
-  public $id;
+  protected $id;
 
   /**
    * The App Module label.
    *
    * @var string
    */
-  public $label;
+  protected $label;
+
+  /**
+   * The App Module path validator.
+   *
+   * Used to ensure a requested URL matches an app module path.
+   *
+   * @var string
+   */
+  protected $path_validator;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPathValidator() {
+    return $this->path_validator;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPathValidator($path_validator) {
+    $this->path_validator = $path_validator;
+    return $this;
+  }
 
 }

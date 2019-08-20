@@ -56,8 +56,30 @@ class AppModuleForm extends EntityForm {
       ],
       '#disabled' => !$app_module->isNew(),
     ];
+    $validator_doc = <<<EOD
+    Application module loading strips the incoming urls of thier aliases. It then
+    loads the AppModule config object for that alias and uses this path validator
+    (regular expressions) to verify if the the stripped URL is a valid path for
+    this app module.
+EOD;
 
-    // TODO: You will need additional form elements for your custom properties.
+    $form['validators'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Pattern matching.'),
+      '#description' => '<p>' .
+      $this->t('@validator_doc', ['@validator_doc' => $validator_doc]) .
+      '</p>',
+      '#open' => FALSE,
+    ];
+    $form['validators']['path_validator'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Label'),
+      '#maxlength' => 255,
+      '#default_value' => $app_module->getPathValidator(),
+      '#description' => $this->t("The Regex to validate paths against."),
+      '#required' => TRUE,
+    ];
+
     return $form;
   }
 

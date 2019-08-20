@@ -8,6 +8,9 @@ app_module.app.*:
     label:
       type: label
       label: 'Label'
+    path_validator:
+      type: string
+      label: 'Regex to validate paths by'
 
 field.storage_settings.app_module_reference:
   type: mapping
