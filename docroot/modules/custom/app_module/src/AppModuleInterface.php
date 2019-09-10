@@ -27,4 +27,17 @@ interface AppModuleInterface extends ConfigEntityInterface {
    */
   public function setPathValidator($pathValidator);
 
+  /**
+   * Determines if the path is valid or not.
+   *
+   * This performs a case insensative match.
+   *
+   * @param string $path
+   *   The app module route. DO NOT include the entity alias.
+   *
+   * @return bool
+   *   TRUE if the path is a valid path, FALSE if not.
+   */
+  public function isPathValid($path);
+
 }

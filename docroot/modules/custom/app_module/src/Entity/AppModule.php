@@ -76,4 +76,16 @@ class AppModule extends ConfigEntityBase implements AppModuleInterface {
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function isPathValid($path) {
+    $regex = '/' . $this->path_validator . '/i';
+
+    if (preg_match($regex, $path)) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
 }

@@ -86,6 +86,7 @@ abstract class AppModuleFieldBrowserTestBase extends BrowserTestBase {
       [
         'label' => $this->appModuleId,
         'id' => $this->appModuleId,
+        'path_validator' => '.*',
       ],
       'Save'
     );

@@ -1,0 +1,6 @@
+services:
+  app_module.app_path_storage:
+    class: Drupal\app_module\Path\AppPathStorage
+    arguments: ['@database', '@module_handler']
+    tags:
+      - { name: backend_overridable }

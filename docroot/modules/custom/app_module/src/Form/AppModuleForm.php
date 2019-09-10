@@ -65,22 +65,43 @@ EOD;
 
     $form['validators'] = [
       '#type' => 'details',
-      '#title' => $this->t('Pattern matching.'),
+      '#title' => $this->t('Pattern matching'),
       '#description' => '<p>' .
       $this->t('@validator_doc', ['@validator_doc' => $validator_doc]) .
       '</p>',
-      '#open' => FALSE,
+      '#open' => TRUE,
     ];
     $form['validators']['path_validator'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Label'),
+      '#title' => $this->t('Path Validation Pattern'),
       '#maxlength' => 255,
       '#default_value' => $app_module->getPathValidator(),
-      '#description' => $this->t("The Regex to validate paths against."),
+      '#description' => $this->t("The Regex to validate paths against. Do not enter leading and trailing slashes (/)."),
       '#required' => TRUE,
+      '#element_validate' => [[$this, 'validatePathValidator']],
     ];
 
     return $form;
+  }
+
+  /**
+   * Validates the path validator.
+   *
+   * @param array $element
+   *   The form element to process.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $complete_form
+   *   The complete form structure.
+   */
+  public function validatePathValidator(array &$element, FormStateInterface $form_state, array &$complete_form) {
+    // Check if path_validator is a valid regex.
+    $values = $form_state->getValues();
+    $path_validator = $values['path_validator'];
+
+    if (@preg_match('/' . $path_validator . '/', NULL) === FALSE) {
+      $form_state->setError($element, $this->t('The Path Validation Pattern is not a valid regular expression.'));
+    }
   }
 
   /**

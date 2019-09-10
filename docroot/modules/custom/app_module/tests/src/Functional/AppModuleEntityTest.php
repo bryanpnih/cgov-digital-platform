@@ -104,6 +104,7 @@ class AppModuleEntityTest extends BrowserTestBase {
       [
         'label' => $app_machine_name,
         'id' => $app_machine_name,
+        'path_validator' => '.*',
       ],
       'Save'
     );
@@ -122,6 +123,7 @@ class AppModuleEntityTest extends BrowserTestBase {
       [
         'label' => $app2_label,
         'id' => $app2_machine_name,
+        'path_validator' => '.*',
       ],
       'Save'
     );
@@ -136,10 +138,24 @@ class AppModuleEntityTest extends BrowserTestBase {
       [
         'label' => $app2_label,
         'id' => $app2_machine_name,
+        'path_validator' => '.*',
       ],
       'Save'
     );
     $assert->pageTextContains('The machine-readable name is already in use.');
+
+    // Try to save an appmodule with a bad path validator, and verify that we
+    // see an error message and not a PHP error.
+    $this->drupalPostForm(
+      Url::fromRoute('entity.app_module.add_form'),
+      [
+        'label' => 'Bad Path Validator',
+        'id' => 'bad_path_validator',
+        'path_validator' => '/',
+      ],
+      'Save'
+    );
+    $assert->pageTextContains('The Path Validation Pattern is not a valid regular expression.');
 
     // 6) Verify that required links are present on respective paths.
     $this->drupalGet(Url::fromRoute('entity.app_module.collection'));
@@ -159,6 +175,17 @@ class AppModuleEntityTest extends BrowserTestBase {
       [':path' => '/admin/structure/app_module']
     );
     $this->assertEqual(count($cancel_button), 1, 'Found cancel button linking to list page.');
+
+    // 7) Verify isPathValid works correctly.
+    /* @var \Drupal\app_module\AppModuleInterface */
+    $pathTest = AppModule::create([
+      'label' => 'Bad Path Validator',
+      'id' => 'bad_path_validator',
+      'path_validator' => '^\/foo$',
+    ]);
+
+    $this->assertTrue($pathTest->isPathValid('/foo'), "/foo should be a valid path");
+    $this->assertFalse($pathTest->isPathValid('/foo/bar'), "/foo/bar should not be a valid path");
 
   }
 
