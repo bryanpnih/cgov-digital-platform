@@ -183,19 +183,48 @@ class AppModuleRenderArrayBuilderTest extends BrowserTestBase {
   /**
    * Helper method for testing "render" output.
    */
+  private function setRequest(
+    AppModule $entity,
+    $app_module_path,
+    $default_null_path = TRUE
+  ) {
+    // Get the plugin.
+    $plugin = $entity->getAppModulePlugin();
+
+    // Now get route info. We will make the app module path be
+    // / if it is null, or we just pass through the null. It
+    // depends on the tests.
+    $route_info = $plugin->matchRoute(
+      $default_null_path ? ($app_module_path ?? '/') : $app_module_path,
+      []
+    );
+
+    // Smush the params together with the app_module_route.
+    $params = array_merge(
+      ['app_module_route' => $route_info['app_module_route']],
+      $route_info['params']
+    );
+
+    $request = Request::create('/foo/bar', 'GET', $params);
+    $this->stack->push($request);
+  }
+
+  /**
+   * Helper method for testing "render" output.
+   */
   private function evalBuildFromPrerender(
     $app_module_path,
     $app_module_id,
     array $content
   ) {
-    $params = [];
-    if ($app_module_path) {
-      $params['app_module_route'] = $app_module_path;
-    }
-    $request = Request::create('/foo/bar', 'GET', $params);
-    $this->stack->push($request);
 
+    // Load the entity.
     $entity = AppModule::load($app_module_id);
+
+    // Setup the request.
+    $this->setRequest($entity, $app_module_path);
+
+    // Build.
     $build = $this->builder->build($entity, []);
 
     // Now call the pre_render method to change the build.
@@ -230,16 +259,16 @@ class AppModuleRenderArrayBuilderTest extends BrowserTestBase {
     $contexts = ['url.query_args:app_module_route'],
     $max_age = 0
   ) {
-    // Test basic render with defaults.
-    $params = [];
-    if ($app_module_path) {
-      $params['app_module_route'] = $app_module_path;
-    }
-    $request = Request::create('/foo/bar', 'GET', $params);
-    $this->stack->push($request);
+    // Load the entity.
     $entity = AppModule::load($app_module_id);
 
+    // Setup the request.
+    $this->setRequest($entity, $app_module_path);
+
+    // Build.
     $build = $this->builder->build($entity, []);
+
+    // Tests.
     $this->assertEqual($build['#app_module_info']['path'], $app_module_path ?? '/', "Path is correct.");
     $this->assertEqual($build['#app_module_id'], $app_module_id, "App module id is set");
     $this->assertEqual($build['#app_route_id'], $app_route_id, "App module route id is set");
