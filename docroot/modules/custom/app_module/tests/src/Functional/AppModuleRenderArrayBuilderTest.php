@@ -88,7 +88,7 @@ class AppModuleRenderArrayBuilderTest extends BrowserTestBase {
       NULL,
       'test_app_module',
       'default',
-      ['config:app_module.app.test_app_module']
+      ['config:app_module.app_module.test_app_module']
     );
 
     /* -----------------------------------------------------------------------
@@ -103,7 +103,7 @@ class AppModuleRenderArrayBuilderTest extends BrowserTestBase {
       NULL,
       'caching_app_module',
       'default',
-      ['caching_app_module_plugin', 'config:app_module.app.caching_app_module'],
+      ['caching_app_module_plugin', 'config:app_module.app_module.caching_app_module'],
       ['url.query_args:app_module_route'],
       50
     );
@@ -116,7 +116,7 @@ class AppModuleRenderArrayBuilderTest extends BrowserTestBase {
       [
         'caching_app_module_plugin',
         'caching_app_module_plugin:chicken',
-        'config:app_module.app.caching_app_module',
+        'config:app_module.app_module.caching_app_module',
       ],
       ['url.query_args:app_module_route', "url.query_args:chicken_param"],
       100
@@ -127,7 +127,7 @@ class AppModuleRenderArrayBuilderTest extends BrowserTestBase {
       NULL,
       'test_multi_route_app_module',
       'default',
-      ['test_multi_route_app_module_plugin', 'config:app_module.app.test_multi_route_app_module'],
+      ['test_multi_route_app_module_plugin', 'config:app_module.app_module.test_multi_route_app_module'],
       ['url.query_args:app_module_route'],
       50
     );
@@ -140,7 +140,7 @@ class AppModuleRenderArrayBuilderTest extends BrowserTestBase {
       [
         'test_multi_route_app_module_plugin',
         'test_multi_route_app_module_plugin:chicken',
-        'config:app_module.app.test_multi_route_app_module',
+        'config:app_module.app_module.test_multi_route_app_module',
       ],
       ['url.query_args:app_module_route', "url.query_args:chicken_param"],
       100

@@ -4,3 +4,32 @@
  * @file
  * Contains cgov_application_page.module.
  */
+
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function cgov_application_page_node_insert(EntityInterface $entity) {
+  if ($entity->bundle() === 'cgov_application_page') {
+    $app_path_svc = \Drupal::service('app_module.app_path_manager');
+    $app_path_svc->registerAppPath($entity, 'insert');
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function cgov_application_page_node_update(EntityInterface $entity) {
+  if ($entity->bundle() === 'cgov_application_page') {
+    $app_path_svc = \Drupal::service('app_module.app_path_manager');
+    $app_path_svc->registerAppPath($entity, 'update');
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ */
+function cgov_application_page_node_delete(EntityInterface $entity) {
+
+}
