@@ -97,6 +97,15 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
    * This makes a pretty big assumption - Drupal will ensure that an entity
    * has a unique alias before it gets to this stage.
    *
+   * COMMENT: This probably should not handle updates, only initial
+   * registration. This is because:
+   *  1. Our .module file will keep the alias in sync with updates to the
+   *     owner alias.
+   *  2. While simple app_module_id changes and settings are easy to update,
+   *     we have to account for cases when an app module was removed from a
+   *     entity. In that case we should delete the app path, but it does not
+   *     mean the entity was deleted.  I don't want that logic here.
+   *
    * NOTE: This is inspired by PathautoGenerator.
    */
   public function registerAppPath(EntityInterface $entity, $op, $app_field_id = 'field_application_module') {
@@ -134,10 +143,11 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
     // Get the alias and test to ensure it exists, if it does not then we
     // really can't do anything.
     // ASSUMPTION/HACK: Our nodes will only have 1 alias.
-    $owner_alias = $entity->path->alias;
-    if ($owner_alias === NULL) {
+    if (!$entity->path) {
       return NULL;
     }
+    $owner_alias = $entity->path->alias;
+    $owner_pid = $entity->path->pid;
 
     // Get language.
     // Core does not handle aliases with language Not Applicable,
@@ -153,9 +163,10 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
 
     // Check to see if this is an update.
     // ASSUMPTION/HACK: Our nodes will only have 1 alias.
-    $existing_path = $this->storage->load(['owner_source' => $owner_source]);
+    $existing_path = $this->storage->load(['owner_pid' => $owner_pid]);
 
     $return = $this->storage->save(
+      $owner_pid,
       $owner_source,
       $owner_alias,
       $app_module_id,

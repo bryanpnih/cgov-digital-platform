@@ -101,6 +101,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
 
     $expected = [
       'pid' => 3,
+      'owner_pid' => 123,
       'owner_source' => '/node/22',
       'owner_alias' => '/test-alias',
       'app_module_id' => 'test_app_module',
@@ -113,7 +114,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
     $this->appPathStorage
       ->expects($this->exactly(1))
       ->method('load')
-      ->with(['owner_source' => '/node/22'])
+      ->with(['owner_pid' => 123])
       ->willReturn(FALSE);
 
     // Expected save call at the end.
@@ -121,6 +122,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
       ->expects($this->exactly(1))
       ->method('save')
       ->with(
+        123,
         '/node/22',
         '/test-alias',
         'test_app_module',
@@ -130,6 +132,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
       )
       ->will($this->returnCallback(
         function (
+          $owner_pid,
           $owner_source,
           $owner_alias,
           $app_module_id,
@@ -139,6 +142,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
         ) {
           return [
             'pid' => $pid ?? 3,
+            'owner_pid' => $owner_pid,
             'owner_source' => $owner_source,
             'owner_alias' => $owner_alias,
             'app_module_id' => $app_module_id,
@@ -149,6 +153,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
       ));
 
     $entity = $this->getMockedNode(
+      123,
       'node/22',
       '/test-alias',
       new Language(['id' => 'en']),
@@ -167,6 +172,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
 
     $expected = [
       'pid' => 3,
+      'owner_pid' => 123,
       'owner_source' => '/node/22',
       'owner_alias' => '/test-alias',
       'app_module_id' => 'test_app_module',
@@ -179,9 +185,10 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
     $this->appPathStorage
       ->expects($this->exactly(1))
       ->method('load')
-      ->with(['owner_source' => '/node/22'])
+      ->with(['owner_pid' => 123])
       ->willReturn([
         'pid' => 3,
+        'owner_pid' => 123,
         'owner_source' => '/node/22',
         'owner_alias' => '/old-alias',
         'app_module_id' => 'other_app_module',
@@ -194,6 +201,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
       ->expects($this->exactly(1))
       ->method('save')
       ->with(
+        123,
         '/node/22',
         '/test-alias',
         'test_app_module',
@@ -203,6 +211,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
       )
       ->will($this->returnCallback(
         function (
+          $owner_pid,
           $owner_source,
           $owner_alias,
           $app_module_id,
@@ -212,6 +221,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
         ) {
           return [
             'pid' => $pid ?? 99,
+            'owner_pid' => $owner_pid,
             'owner_source' => $owner_source,
             'owner_alias' => $owner_alias,
             'app_module_id' => $app_module_id,
@@ -222,6 +232,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
       ));
 
     $entity = $this->getMockedNode(
+      123,
       'node/22',
       '/test-alias',
       new Language(['id' => 'en']),
@@ -240,6 +251,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
    *   A mocked node.
    */
   protected function getMockedNode(
+    $owner_pid,
     $route,
     $alias,
     $language,
@@ -278,7 +290,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
 
     $path_field_list = $this->getFieldItemList(
       [
-        $this->getMockPathField($alias),
+        $this->getMockPathField($owner_pid, $alias),
       ]
     );
     $app_module_field_list = $this->getFieldItemList(
@@ -313,7 +325,7 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
    * @return \Drupal\Core\Field\FieldItemInterface
    *   The field item mock.
    */
-  protected function getMockPathField($alias) {
+  protected function getMockPathField($owner_pid, $alias) {
 
     $field = $this->getMockBuilder('\Drupal\Core\Field\FieldItemInterface')
       ->disableOriginalConstructor()
@@ -321,8 +333,21 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
 
     $field->expects($this->any())
       ->method('__get')
-      ->with('alias')
-      ->willReturn($alias);
+      ->with($this->isType('string'))
+      ->will($this->returnCallback(
+        function ($field_name) use ($owner_pid, $alias) {
+          switch ($field_name) {
+            case 'alias':
+              return $alias;
+
+            case 'pid':
+              return $owner_pid;
+
+            default:
+              throw new Exception("Unknown field " . $field_name);
+          }
+        }
+      ));
 
     return $field;
   }

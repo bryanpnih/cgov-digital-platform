@@ -63,6 +63,7 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
         [
           [
             'pid' => 3,
+            'owner_pid' => 123,
             'owner_source' => '/node/22',
             'owner_alias' => '/no-match',
             'app_module_id' => 'test_module_id',
@@ -106,6 +107,7 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
         [
           [
             'pid' => 3,
+            'owner_pid' => 123,
             'owner_source' => '/node/22',
             'owner_alias' => '/no-match',
             'app_module_id' => 'test_module_id',
@@ -149,6 +151,7 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
         [
           [
             'pid' => 3,
+            'owner_pid' => 123,
             'owner_source' => '/node/22',
             'owner_alias' => $path,
             'app_module_id' => 'test_module_id',
@@ -194,6 +197,7 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
         [
           [
             'pid' => 3,
+            'owner_pid' => 123,
             'owner_source' => '/node/22',
             'owner_alias' => $path,
             'app_module_id' => 'test_module_id',
@@ -238,6 +242,7 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
         [
           [
             'pid' => 3,
+            'owner_pid' => 123,
             'owner_source' => '/node/22',
             'owner_alias' => '/short',
             'app_module_id' => 'test_module_id',
@@ -246,6 +251,7 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
           ],
           [
             'pid' => 5,
+            'owner_pid' => 456,
             'owner_source' => '/node/33',
             'owner_alias' => '/short/then/long',
             'app_module_id' => 'test_module_id',

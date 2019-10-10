@@ -2,6 +2,7 @@
 
 namespace Drupal\app_module;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -54,6 +55,7 @@ class AppPathStorage implements AppPathStorageInterface {
    * {@inheritdoc}
    */
   public function save(
+    $owner_pid,
     $owner_source,
     $owner_alias,
     $app_module_id,
@@ -68,6 +70,7 @@ class AppPathStorage implements AppPathStorageInterface {
       throw new \InvalidArgumentException(sprintf('Owner alias path %s has to start with a slash.', $owner_alias));
     }
     $fields = [
+      'owner_pid' => $owner_pid,
       'owner_source' => $owner_source,
       'owner_alias' => $owner_alias,
       'app_module_id' => $app_module_id,
@@ -102,7 +105,7 @@ class AppPathStorage implements AppPathStorageInterface {
       // Fetch the current values so that an update hook can identify what
       // exactly changed.
       try {
-        $original = $this->connection->query('SELECT owner_source, owner_alias, app_module_id, app_module_data, langcode FROM {app_module_paths} WHERE pid = :pid', [':pid' => $pid])
+        $original = $this->connection->query('SELECT owner_pid, owner_source, owner_alias, app_module_id, app_module_data, langcode FROM {app_module_paths} WHERE pid = :pid', [':pid' => $pid])
           ->fetchAssoc();
       }
       catch (\Exception $e) {
@@ -149,6 +152,7 @@ class AppPathStorage implements AppPathStorageInterface {
       if ($result) {
         $path = [
           'pid' => $result['pid'],
+          'owner_pid' => $result['owner_pid'],
           'owner_source' => $result['owner_source'],
           'owner_alias' => $result['owner_alias'],
           'app_module_id' => $result['app_module_id'],
@@ -184,6 +188,7 @@ class AppPathStorage implements AppPathStorageInterface {
       while ($record = $result->fetchAssoc()) {
         $paths[] = [
           'pid' => $record['pid'],
+          'owner_pid' => $record['owner_pid'],
           'owner_source' => $record['owner_source'],
           'owner_alias' => $record['owner_alias'],
           'app_module_id' => $record['app_module_id'],
@@ -279,6 +284,12 @@ class AppPathStorage implements AppPathStorageInterface {
         'pid' => [
           'description' => 'A unique app module path alias identifier.',
           'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ],
+        'owner_pid' => [
+          'description' => 'A the owning path alias identifier.',
+          'type' => 'int',
           'unsigned' => TRUE,
           'not null' => TRUE,
         ],

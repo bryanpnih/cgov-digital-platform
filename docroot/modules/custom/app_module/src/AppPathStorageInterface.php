@@ -30,6 +30,8 @@ interface AppPathStorageInterface {
   /**
    * Saves a app module path alias to the database.
    *
+   * @param int $owner_pid
+   *   The PID for the assocated alias.
    * @param string $owner_source
    *   The owning entities internal system path.
    * @param string $owner_alias
@@ -46,6 +48,7 @@ interface AppPathStorageInterface {
    * @return array|false
    *   FALSE if the path could not be saved or an associative array containing
    *   the following keys:
+   *   - owner_pid (int): The PID for the associated alias.
    *   - owner_source (string): The internal system path with a starting slash.
    *   - owner_alias (string): The URL alias with a starting slash.
    *   - app_module_id (string): The id of the app module.
@@ -59,6 +62,7 @@ interface AppPathStorageInterface {
    *   Thrown when either the source or alias has not a starting slash.
    */
   public function save(
+    $owner_pid,
     $owner_source,
     $owner_alias,
     $app_module_id,
@@ -78,6 +82,7 @@ interface AppPathStorageInterface {
    * @return array|false
    *   FALSE if no alias was found or an associative arrays containing
    *   the following keys from the FIRST MATCH:
+   *   - owner_pid (int): The PID for the associated alias.
    *   - owner_source (string): The internal system path with a starting slash.
    *   - owner_alias (string): The URL alias with a starting slash.
    *   - app_module_id (string): The id of the app module.
@@ -93,6 +98,7 @@ interface AppPathStorageInterface {
    * @return array
    *   An array of app paths for the langcode, or an empty array if none found,
    *   containing the following keys:
+   *   - owner_pid (int): The PID for the associated alias.
    *   - owner_source (string): The internal system path with a starting slash.
    *   - owner_alias (string): The URL alias with a starting slash.
    *   - app_module_id (string): The id of the app module.

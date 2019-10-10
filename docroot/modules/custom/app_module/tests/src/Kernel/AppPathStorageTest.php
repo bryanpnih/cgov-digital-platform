@@ -39,6 +39,7 @@ class AppPathStorageTest extends KernelTestBase {
 
     // Store an item.
     $this->storage->save(
+      123,
       '/node/10',
       '/test-alias-Case',
       'test_app_module'
@@ -46,6 +47,7 @@ class AppPathStorageTest extends KernelTestBase {
 
     $expected = [
       'pid' => 1,
+      'owner_pid' => 123,
       'owner_alias' => '/test-alias-Case',
       'owner_source' => '/node/10',
       'app_module_id' => 'test_app_module',
@@ -58,13 +60,15 @@ class AppPathStorageTest extends KernelTestBase {
     $this->assertEquals($expected, $this->storage->load(['owner_source' => '/node/10']));
     $this->assertEquals($expected, $this->storage->load(['owner_source' => '/Node/10']));
     $this->assertEquals($expected, $this->storage->load(['app_module_id' => 'test_app_module']));
+    $this->assertEquals($expected, $this->storage->load(['owner_pid' => 123]));
 
     // Test Delete.
-    $this->storage->delete(['owner_alias' => '/test-alias-case']);
+    $this->storage->delete(['owner_pid' => 123]);
     $this->assertFalse($this->storage->load(['owner_alias' => '/test-alias-Case']));
 
     // Store an item.
     $this->storage->save(
+      123,
       '/node/11',
       '/test-multi-alias-1',
       'test_app_module'
@@ -72,6 +76,7 @@ class AppPathStorageTest extends KernelTestBase {
 
     // Store an item.
     $this->storage->save(
+      345,
       '/node/12',
       '/test-multi-alias-2',
       'test_app_module'
@@ -81,6 +86,7 @@ class AppPathStorageTest extends KernelTestBase {
     $expected_arr = [
       [
         'pid' => 3,
+        'owner_pid' => 345,
         'owner_alias' => '/test-multi-alias-2',
         'owner_source' => '/node/12',
         'app_module_id' => 'test_app_module',
@@ -89,6 +95,7 @@ class AppPathStorageTest extends KernelTestBase {
       ],
       [
         'pid' => 2,
+        'owner_pid' => 123,
         'owner_alias' => '/test-multi-alias-1',
         'owner_source' => '/node/11',
         'app_module_id' => 'test_app_module',
