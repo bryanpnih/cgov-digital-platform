@@ -76,10 +76,6 @@ abstract class AppPathManagerTestBase extends UnitTestCase {
 
   }
 
-  /* TODO: Test Registration */
-
-  /* TODO: Test Caching */
-
   /**
    * Sets up the current language.
    *

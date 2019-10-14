@@ -12,8 +12,10 @@ use Drupal\Core\Entity\EntityInterface;
  */
 function cgov_application_page_node_insert(EntityInterface $entity) {
   if ($entity->bundle() === 'cgov_application_page') {
+    /* New entity then the app path never existed. Register.
+     */
     $app_path_svc = \Drupal::service('app_module.app_path_manager');
-    $app_path_svc->registerAppPath($entity, 'insert');
+    $app_path_svc->registerAppPath($entity);
   }
 }
 
@@ -22,25 +24,10 @@ function cgov_application_page_node_insert(EntityInterface $entity) {
  */
 function cgov_application_page_node_update(EntityInterface $entity) {
   if ($entity->bundle() === 'cgov_application_page') {
-    /* We need to be careful here. The app path manager listens to updates to
-     * the actual aliases in our to stay in sync. So our register probably
-     * needs to do something else, however, we need to make sure that the
-     * app ID and settings stay in sync.
+    /* Update the app path information, or create if it did not exist
+     * before.
      */
     $app_path_svc = \Drupal::service('app_module.app_path_manager');
-    $app_path_svc->registerAppPath($entity, 'update');
+    $app_path_svc->updateAppPathData($entity);
   }
-}
-
-/**
- * Implements hook_ENTITY_TYPE_delete().
- */
-function cgov_application_page_node_delete(EntityInterface $entity) {
-  /*
-   * We probably don't need this as the app_module module listens for
-   * path deletions. When the node is deleted, then the alias will be
-   * deleted. Our handler will get triggered and remove the entry with
-   * that source_pid.
-   *
-   */
 }

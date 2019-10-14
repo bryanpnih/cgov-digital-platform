@@ -92,35 +92,47 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
   }
 
   /**
+   * Determines if an entity is a valid one for our purposes.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   * @param string $app_field_id
+   *   The name of the app module reference field.
+   *
+   * @return bool
+   *   TRUE if the entity is good. FALSE if bad.
+   */
+  private function isValidEntity(EntityInterface $entity, $app_field_id) {
+    // Skip if the entity does not have the path field.
+    if (!($entity instanceof ContentEntityInterface) || !$entity->hasField('path')) {
+      return FALSE;
+    }
+
+    // Skip if we don't actually have the requested field.
+    if (!$entity->hasField($app_field_id)) {
+      return FALSE;
+    }
+
+    // Only act if this is the default revision.
+    if ($entity instanceof RevisionableInterface && !$entity->isDefaultRevision()) {
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  /**
    * {@inheritdoc}
    *
    * This makes a pretty big assumption - Drupal will ensure that an entity
    * has a unique alias before it gets to this stage.
    *
-   * COMMENT: This probably should not handle updates, only initial
-   * registration. This is because:
-   *  1. Our .module file will keep the alias in sync with updates to the
-   *     owner alias.
-   *  2. While simple app_module_id changes and settings are easy to update,
-   *     we have to account for cases when an app module was removed from a
-   *     entity. In that case we should delete the app path, but it does not
-   *     mean the entity was deleted.  I don't want that logic here.
-   *
    * NOTE: This is inspired by PathautoGenerator.
    */
-  public function registerAppPath(EntityInterface $entity, $op, $app_field_id = 'field_application_module') {
-    // Skip if the entity does not have the path field.
-    if (!($entity instanceof ContentEntityInterface) || !$entity->hasField('path')) {
-      return NULL;
-    }
+  public function registerAppPath(EntityInterface $entity, $app_field_id = 'field_application_module') {
 
-    // Skip if we don't actually have the requested field.
-    if (!$entity->hasField($app_field_id)) {
-      return NULL;
-    }
-
-    // Only act if this is the default revision.
-    if ($entity instanceof RevisionableInterface && !$entity->isDefaultRevision()) {
+    // Check the entity.
+    if (!$this->isValidEntity($entity, $app_field_id)) {
       return NULL;
     }
 
@@ -176,6 +188,93 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
     );
 
     return $return;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * COMMENT: This probably should not handle updates, only initial
+   * registration. This is because:
+   *  1. Our .module file will keep the alias in sync with updates to the
+   *     owner alias.
+   *  2. While simple app_module_id changes and settings are easy to update,
+   *     we have to account for cases when an app module was removed from a
+   *     entity. In that case we should delete the app path, but it does not
+   *     mean the entity was deleted.  I don't want that logic here.
+   */
+  public function updateAppPathData(EntityInterface $entity, $app_field_id = 'field_application_module') {
+
+    // Check the entity.
+    if (!$this->isValidEntity($entity, $app_field_id)) {
+      return NULL;
+    }
+
+    // Get the PID.
+    if (!$entity->path) {
+      // This does not have an alias, so it is useless to us.
+      return NULL;
+    }
+
+    // Check and see if the $owner_pid exists in the DB, if it does
+    // we are an update.
+    $owner_pid = $entity->path->pid;
+
+    $app_path = $this->storage->load(['owner_pid' => $owner_pid]);
+
+    if (!$app_path) {
+      // There is no existing app path. Let's see if it is because we did not
+      // have a populated field_application_module the last time we saved.
+      return $this->registerAppPath($entity, $app_field_id);
+    }
+
+    // We have an app path, and that means that we will just be updating the
+    // app module id and data.
+    $app_module_id = $entity->$app_field_id->target_id;
+    $app_module_data = $entity->$app_field_id->data;
+
+    $return = $this->storage->save(
+      $app_path['owner_pid'],
+      $app_path['owner_source'],
+      $app_path['owner_alias'],
+      $app_module_id,
+      $app_module_data,
+      $app_path['langcode'],
+      $app_path['pid']
+    );
+
+    return $return;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateAliasFromPath(array $path) {
+    // Nothing to see here. Exit.
+    if ($path['alias'] === $path['original']['alias']) {
+      return;
+    }
+
+    $app_path = $this->storage->load(['owner_pid' => $path['pid']]);
+
+    if ($app_path) {
+      $this->storage->save(
+        $app_path['owner_pid'],
+        $app_path['owner_source'],
+        $path['alias'],
+        $app_path['app_module_id'],
+        $app_path['app_module_data'],
+        $app_path['langcode'],
+        $app_path['pid']
+      );
+    }
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteByPath(array $path) {
+    $this->storage->delete(['owner_pid' => $path['pid']]);
   }
 
   /**

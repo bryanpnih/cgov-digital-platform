@@ -268,6 +268,7 @@ class AppPathStorage implements AppPathStorageInterface {
    */
   protected function catchException(\Exception $e) {
     if ($this->connection->schema()->tableExists(static::TABLE)) {
+
       throw $e;
     }
   }
@@ -333,6 +334,9 @@ class AppPathStorage implements AppPathStorageInterface {
         'owner_alias_langcode_pid' => ['owner_alias', 'langcode', 'pid'],
         'owner_source_langcode_pid' => ['owner_source', 'langcode', 'pid'],
         'appmodule_langcode_pid' => ['app_module_id', 'langcode', 'pid'],
+      ],
+      'unique keys' => [
+        'owner_pid' => ['owner_pid'],
       ],
     ];
   }

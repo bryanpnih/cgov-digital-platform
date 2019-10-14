@@ -17,19 +17,49 @@ use Drupal\Core\Entity\EntityInterface;
 interface AppPathManagerInterface {
 
   /**
-   * Helper function to create an app path for an entity.
+   * Helper function to create a NEW app path for an entity.
    *
    * This is so that we do not need to add this logic to all
    * of the entity modules that we may add app modules to.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity to create the app module path entry for.
-   * @param string $op
-   *   Is this an 'update' or 'insert'? Unknown values default to 'insert'.
    * @param string $app_field_id
    *   The name of the app module reference field.
    */
-  public function registerAppPath(EntityInterface $entity, $op, $app_field_id = 'field_application_module');
+  public function registerAppPath(EntityInterface $entity, $app_field_id = 'field_application_module');
+
+  /**
+   * Helper function to UPDATE an app path for an entity.
+   *
+   * The app_module module will handle updating the aliases for the entities
+   * when they change. So this just needs to update the app_module_id and the
+   * app_module_data.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to create the app module path entry for.
+   * @param string $app_field_id
+   *   The name of the app module reference field.
+   */
+  public function updateAppPathData(EntityInterface $entity, $app_field_id = 'field_application_module');
+
+  /**
+   * Updates an app path's alias from a path info.
+   *
+   * @param array $path
+   *   The array structure is identical to that of the return value of
+   *   \Drupal\Core\Path\PathInterface::save().
+   */
+  public function updateAliasFromPath(array $path);
+
+  /**
+   * Delete's an app path based on a path info.
+   *
+   * @param array $path
+   *   The array structure is identical to that of the return value of
+   *   \Drupal\Core\Path\PathInterface::save().
+   */
+  public function deleteByPath(array $path);
 
   /**
    * Given a requested path, return the path it most closely matches.

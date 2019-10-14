@@ -81,11 +81,11 @@ function app_module_theme_suggestions_app_module(array $variables) {
 /**
  * Implements hook_path_update().
  */
-function app_module_path_update($path) {
+function app_module_path_update(array $path) {
   /* If the owner_pid can be found, then we should update the
    * owner_alias. ASSUMPTION: the source cannot change.
    */
-
+  \Drupal::service('app_module.app_path_manager')->updateAliasFromPath($path);
 }
 
 /**
@@ -95,4 +95,5 @@ function app_module_path_delete($path) {
   /* If the owner_pid can be found, then we should delete
    * the item.
    */
+  \Drupal::service('app_module.app_path_manager')->deleteByPath($path);
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\app_module\Kernel;
 
+use Drupal\Core\Database\IntegrityConstraintViolationException;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -109,6 +110,21 @@ class AppPathStorageTest extends KernelTestBase {
     $this->assertEquals($expected_arr[0], $actual_arr[0], "loadAll first app path good.");
     $this->assertEquals($expected_arr[1], $actual_arr[1], "loadAll second app path good.");
 
+    $error_occurred = FALSE;
+
+    try {
+      $this->storage->save(
+        345,
+        '/node/12',
+        '/test-multi-alias-2',
+        'test_app_module'
+      );
+    }
+    catch (IntegrityConstraintViolationException $e) {
+      $error_occurred = TRUE;
+    }
+
+    $this->assertTrue(($error_occurred), "Should error saving a path with the same owner pid.");
   }
 
 }

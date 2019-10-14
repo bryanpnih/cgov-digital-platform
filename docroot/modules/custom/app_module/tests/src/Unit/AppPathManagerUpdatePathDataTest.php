@@ -8,14 +8,14 @@ use Drupal\Core\Language\Language;
  * @coversDefaultClass \Drupal\app_module\AppPathManager
  * @group app_module
  */
-class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
+class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
 
   /**
    * Tests the registerAppPath method - Negative Test.
    *
    * Tests for when the entity is not good.
    *
-   * @covers ::registerAppPath
+   * @covers ::updateAppPathData
    */
   public function testRegisterPathNotGoodEntity() {
     // Not a Content Entity.
@@ -96,6 +96,9 @@ class AppPathManagerRegisterPathTest extends AppPathManagerTestBase {
 
   /**
    * Positive test for normal action.
+   *
+   * This is the most complicated. The was no app path found, so
+   * we need to create it and not juust update.
    */
   public function testGoodEntityNew() {
 
