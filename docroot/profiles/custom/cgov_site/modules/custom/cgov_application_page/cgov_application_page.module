@@ -8,9 +8,12 @@
 use Drupal\Core\Entity\EntityInterface;
 
 /**
- * Implements hook_ENTITY_TYPE_insert().
+ * Implements hook_entity_insert().
+ *
+ * THIS MUST BE hook_entity NOT hook_ENTITY_TYPE or else pathauto will
+ * not fire first.
  */
-function cgov_application_page_node_insert(EntityInterface $entity) {
+function cgov_application_page_entity_insert(EntityInterface $entity) {
   if ($entity->bundle() === 'cgov_application_page') {
     /* New entity then the app path never existed. Register.
      */
@@ -21,8 +24,11 @@ function cgov_application_page_node_insert(EntityInterface $entity) {
 
 /**
  * Implements hook_ENTITY_TYPE_update().
+ *
+ * THIS MUST BE hook_entity NOT hook_ENTITY_TYPE or else pathauto will
+ * not fire first.
  */
-function cgov_application_page_node_update(EntityInterface $entity) {
+function cgov_application_page_entity_update(EntityInterface $entity) {
   if ($entity->bundle() === 'cgov_application_page') {
     /* Update the app path information, or create if it did not exist
      * before.
