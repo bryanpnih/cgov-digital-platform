@@ -21,7 +21,7 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
     // Not a Content Entity.
     $test_entity = $this->getNegativeContentEntity('\Drupal\Core\Entity\EntityInterface');
     $this->assertNull(
-      $this->appPathManager->registerAppPath($test_entity),
+      $this->appPathManager->updateAppPath($test_entity),
       "Exits when not a content entity."
     );
 
@@ -49,7 +49,7 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       0
     );
     $this->assertNull(
-      $this->appPathManager->registerAppPath($test_entity),
+      $this->appPathManager->updateAppPath($test_entity),
       "Exits when entity has no path field."
     );
 
@@ -65,7 +65,7 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       0
     );
     $this->assertNull(
-      $this->appPathManager->registerAppPath($test_entity),
+      $this->appPathManager->updateAppPath($test_entity),
       "Exits when content entity has path, but no app module field."
     );
 
@@ -82,7 +82,7 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       1
     );
     $this->assertNull(
-      $this->appPathManager->registerAppPath($test_entity),
+      $this->appPathManager->updateAppPath($test_entity),
       "Exits when revisionable, but not default revision."
     );
 
@@ -93,6 +93,47 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
    *   Test non-revisionable entity.
    *   Test revisionable and default revision.
    */
+
+  /**
+   * Positive test for normal action.
+   *
+   * This is the most complicated. The was no app path found, so
+   * we need to create it and not juust update.
+   */
+  public function testGoodEntityNoAlias() {
+
+    $this->aliasStorage
+      ->expects($this->exactly(1))
+      ->method('load')
+      ->with([
+        'source' => '/node/22',
+        'langcode' => 'en',
+      ])
+      ->willReturn(FALSE);
+
+    // Setup Storage.
+    // Expected Load looking for an existing app path.
+    $this->appPathStorage
+      ->expects($this->never())
+      ->method('load');
+
+    // Expected save call at the end.
+    $this->appPathStorage
+      ->expects($this->never())
+      ->method('save');
+
+    $entity = $this->getMockedNode(
+      123,
+      'node/22',
+      NULL,
+      new Language(['id' => 'en']),
+      'test_app_module',
+      NULL
+    );
+
+    $actual = $this->appPathManager->updateAppPath($entity);
+    $this->assertNull($actual, "No app path created because no alias exists");
+  }
 
   /**
    * Positive test for normal action.
@@ -111,6 +152,21 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       'app_module_data' => NULL,
       'langcode' => 'en',
     ];
+
+    // Alias storage to lookup alias.
+    $this->aliasStorage
+      ->expects($this->exactly(1))
+      ->method('load')
+      ->with([
+        'source' => '/node/22',
+        'langcode' => 'en',
+      ])
+      ->willReturn([
+        'pid' => 123,
+        'source' => '/node/22',
+        'alias' => '/test-alias',
+        'langcode' => 'en',
+      ]);
 
     // Setup Storage.
     // Expected Load looking for an existing app path.
@@ -164,7 +220,7 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       NULL
     );
 
-    $actual = $this->appPathManager->registerAppPath($entity);
+    $actual = $this->appPathManager->updateAppPath($entity);
     $this->assertEquals($expected, $actual, "Insert new alias.");
   }
 
@@ -183,6 +239,21 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       'langcode' => 'en',
     ];
 
+    // Alias storage to lookup alias.
+    $this->aliasStorage
+      ->expects($this->exactly(1))
+      ->method('load')
+      ->with([
+        'source' => '/node/22',
+        'langcode' => 'en',
+      ])
+      ->willReturn([
+        'pid' => 123,
+        'source' => '/node/22',
+        'alias' => '/test-alias',
+        'langcode' => 'en',
+      ]);
+
     // Setup Storage.
     // Expected Load looking for an existing app path.
     $this->appPathStorage
@@ -193,7 +264,7 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
         'pid' => 3,
         'owner_pid' => 123,
         'owner_source' => '/node/22',
-        'owner_alias' => '/old-alias',
+        'owner_alias' => '/test-alias',
         'app_module_id' => 'other_app_module',
         'app_module_data' => NULL,
         'langcode' => 'en',
@@ -243,7 +314,7 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       NULL
     );
 
-    $actual = $this->appPathManager->registerAppPath($entity);
+    $actual = $this->appPathManager->updateAppPath($entity);
     $this->assertEquals($expected, $actual, "Update alias.");
   }
 
@@ -291,11 +362,6 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       ->method('language')
       ->willReturn($language);
 
-    $path_field_list = $this->getFieldItemList(
-      [
-        $this->getMockPathField($owner_pid, $alias),
-      ]
-    );
     $app_module_field_list = $this->getFieldItemList(
       [
         $this->getMockAppModuleField($app_module_id, $app_module_data),
@@ -305,10 +371,8 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
     $entity->expects($this->any())
       ->method('__get')
       ->will($this->returnCallback(
-        function ($field_name) use ($path_field_list, $app_module_field_list) {
+        function ($field_name) use ($app_module_field_list) {
           switch ($field_name) {
-            case 'path':
-              return $path_field_list;
 
             case 'field_application_module':
               return $app_module_field_list;
@@ -320,39 +384,6 @@ class AppPathManagerUpdatePathDataTest extends AppPathManagerTestBase {
       ));
 
     return $entity;
-  }
-
-  /**
-   * Helper function to get path field.
-   *
-   * @return \Drupal\Core\Field\FieldItemInterface
-   *   The field item mock.
-   */
-  protected function getMockPathField($owner_pid, $alias) {
-
-    $field = $this->getMockBuilder('\Drupal\Core\Field\FieldItemInterface')
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $field->expects($this->any())
-      ->method('__get')
-      ->with($this->isType('string'))
-      ->will($this->returnCallback(
-        function ($field_name) use ($owner_pid, $alias) {
-          switch ($field_name) {
-            case 'alias':
-              return $alias;
-
-            case 'pid':
-              return $owner_pid;
-
-            default:
-              throw new Exception("Unknown field " . $field_name);
-          }
-        }
-      ));
-
-    return $field;
   }
 
   /**

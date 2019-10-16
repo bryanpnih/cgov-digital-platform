@@ -8,6 +8,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Path\AliasManagerInterface;
+use Drupal\Core\Path\AliasStorageInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 
@@ -22,6 +23,14 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
    * @var \Drupal\Core\Path\AliasManagerInterface
    */
   protected $aliasManager;
+
+  /**
+   * The alias manager service.
+   *
+   * @var \Drupal\Core\Path\AliasStorageInterface
+   */
+  protected $aliasStorage;
+
 
   /**
    * The app path storage service.
@@ -77,6 +86,8 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
    *
    * @param \Drupal\Core\Path\AliasManagerInterface $alias_manager
    *   The core alias manager service.
+   * @param \Drupal\Core\Path\AliasStorageInterface $alias_storage
+   *   The core alias storage service.
    * @param \Drupal\app_module\AppPathStorageInterface $storage
    *   The app module path storage service.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
@@ -84,8 +95,15 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache
    *   Cache backend.
    */
-  public function __construct(AliasManagerInterface $alias_manager, AppPathStorageInterface $storage, LanguageManagerInterface $language_manager, CacheBackendInterface $cache) {
+  public function __construct(
+    AliasManagerInterface $alias_manager,
+    AliasStorageInterface $alias_storage,
+    AppPathStorageInterface $storage,
+    LanguageManagerInterface $language_manager,
+    CacheBackendInterface $cache
+  ) {
     $this->aliasManager = $alias_manager;
+    $this->aliasStorage = $alias_storage;
     $this->storage = $storage;
     $this->languageManager = $language_manager;
     $this->cache = $cache;
@@ -123,108 +141,28 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
 
   /**
    * {@inheritdoc}
-   *
-   * This makes a pretty big assumption - Drupal will ensure that an entity
-   * has a unique alias before it gets to this stage.
-   *
-   * NOTE: This is inspired by PathautoGenerator.
    */
-  public function registerAppPath(EntityInterface $entity, $app_field_id = 'field_application_module') {
+  public function updateAppPath(EntityInterface $entity, $app_field_id = 'field_application_module') {
 
     // Check the entity.
     if (!$this->isValidEntity($entity, $app_field_id)) {
       return NULL;
     }
 
-    // Get the source route.
-    try {
-      $internalPath = $entity->toUrl()->getInternalPath();
-    }
-    // @todo convert to multi-exception handling in PHP 7.1.
-    catch (EntityMalformedException $exception) {
-      return NULL;
-    }
-    catch (UndefinedLinkTemplateException $exception) {
-      return NULL;
-    }
-    catch (\UnexpectedValueException $exception) {
-      return NULL;
-    }
-    $owner_source = '/' . $internalPath;
+    // Get the alias information.
+    $path = $this->getAliasEntry($entity);
 
-    // Get the alias and test to ensure it exists, if it does not then we
-    // really can't do anything.
-    // ASSUMPTION/HACK: Our nodes will only have 1 alias.
-    if (!$entity->path) {
-      return NULL;
-    }
-    $owner_alias = $entity->path->alias;
-    $owner_pid = $entity->path->pid;
-
-    // Get language.
-    // Core does not handle aliases with language Not Applicable,
-    // so we need to change that to not specified.
-    $langcode = $entity->language()->getId();
-    if ($langcode == LanguageInterface::LANGCODE_NOT_APPLICABLE) {
-      $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
-    }
-
-    // Get the app module ID & data.
-    $app_module_id = $entity->$app_field_id->target_id;
-    $app_module_data = $entity->$app_field_id->data;
-
-    // Check to see if this is an update.
-    // ASSUMPTION/HACK: Our nodes will only have 1 alias.
-    $existing_path = $this->storage->load(['owner_pid' => $owner_pid]);
-
-    $return = $this->storage->save(
-      $owner_pid,
-      $owner_source,
-      $owner_alias,
-      $app_module_id,
-      $app_module_data,
-      $langcode,
-      $existing_path ? $existing_path['pid'] : NULL
-    );
-
-    return $return;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * COMMENT: This probably should not handle updates, only initial
-   * registration. This is because:
-   *  1. Our .module file will keep the alias in sync with updates to the
-   *     owner alias.
-   *  2. While simple app_module_id changes and settings are easy to update,
-   *     we have to account for cases when an app module was removed from a
-   *     entity. In that case we should delete the app path, but it does not
-   *     mean the entity was deleted.  I don't want that logic here.
-   */
-  public function updateAppPathData(EntityInterface $entity, $app_field_id = 'field_application_module') {
-
-    // Check the entity.
-    if (!$this->isValidEntity($entity, $app_field_id)) {
+    if (!$path) {
       return NULL;
     }
 
-    // Get the PID.
-    if (!$entity->path) {
-      // This does not have an alias, so it is useless to us.
-      return NULL;
-    }
-
-    // Check and see if the $owner_pid exists in the DB, if it does
-    // we are an update.
-    $owner_pid = $entity->path->pid;
-
-    $app_path = $this->storage->load(['owner_pid' => $owner_pid]);
+    // See if we have an app path.
+    $app_path = $this->storage->load(['owner_pid' => $path['pid']]);
 
     if (!$app_path) {
       // There is no existing app path. Let's see if it is because we did not
       // have a populated field_application_module the last time we saved.
-      return $this->registerAppPath($entity, $app_field_id);
+      return $this->registerAppPath($entity, $path, $app_field_id);
     }
 
     // We have an app path, and that means that we will just be updating the
@@ -240,6 +178,41 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
       $app_module_data,
       $app_path['langcode'],
       $app_path['pid']
+    );
+
+    return $return;
+  }
+
+  /**
+   * Helper function to create a NEW app path for an entity.
+   *
+   * This is so that we do not need to add this logic to all
+   * of the entity modules that we may add app modules to.
+   *
+   * NOTE: This is inspired by PathautoGenerator.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to create the app module path entry for.
+   * @param array $path
+   *   An associative array matching a AliasStorage::load return.
+   * @param string $app_field_id
+   *   The name of the app module reference field.
+   */
+  protected function registerAppPath(EntityInterface $entity, array $path, $app_field_id = 'field_application_module') {
+
+    // Get the app module ID & data.
+    $app_module_id = $entity->$app_field_id->target_id;
+    $app_module_data = $entity->$app_field_id->data;
+
+    // Treat this as a new item. If it breaks, well,
+    // bad on the caller.
+    $return = $this->storage->save(
+      $path['pid'],
+      $path['source'],
+      $path['alias'],
+      $app_module_id,
+      $app_module_data,
+      $path['langcode']
     );
 
     return $return;
@@ -316,7 +289,7 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
     if ($matchedPath !== $request_path) {
       $index = array_search($request_path, $this->lookupMap[$langcode]);
       if ($index !== FALSE && $index === 0) {
-        return $request_path;
+        return $this->getAppPathByAlias($request_path, $langcode);
       }
       else {
         return NULL;
@@ -341,7 +314,7 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
       // Let's look for the alias at the beginning of the requested
       // path. Case-insensative of course.
       if (stripos($test_req, $test_alias) === 0) {
-        return $path;
+        return $this->getAppPathByAlias($path, $langcode);
       }
 
       // Not a match, move on to the next.
@@ -349,6 +322,33 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
     }
 
     return NULL;
+  }
+
+  /**
+   * Helper to return app path record by alias.
+   *
+   * @param string $alias
+   *   The alias.
+   * @param string $langcode
+   *   The language.
+   *
+   * @return array|null
+   *   The app path record for the alias for the app module entity that most
+   *   closely matches the requested path, or null if no matching paths were
+   *   found.
+   */
+  protected function getAppPathByAlias($alias, $langcode) {
+    $app_path = $this->storage->load([
+      'owner_alias' => $alias,
+      'langcode' => $langcode,
+    ]);
+
+    if (!$app_path) {
+      return NULL;
+    }
+    else {
+      return $app_path;
+    }
   }
 
   /**
@@ -402,6 +402,54 @@ class AppPathManager implements AppPathManagerInterface, CacheDecoratorInterface
     }
 
     $this->isInitialized = TRUE;
+  }
+
+  /**
+   * Helper method to get the alias entry for this entity.
+   */
+  protected function getAliasEntry(EntityInterface $entity) {
+    // Get the source route.
+    try {
+      $internalPath = $entity->toUrl()->getInternalPath();
+    }
+    // @todo convert to multi-exception handling in PHP 7.1.
+    catch (EntityMalformedException $exception) {
+      return NULL;
+    }
+    catch (UndefinedLinkTemplateException $exception) {
+      return NULL;
+    }
+    catch (\UnexpectedValueException $exception) {
+      return NULL;
+    }
+    $owner_source = '/' . $internalPath;
+
+    // Get language.
+    // Core does not handle aliases with language Not Applicable,
+    // so we need to change that to not specified.
+    $langcode = $entity->language()->getId();
+    if ($langcode == LanguageInterface::LANGCODE_NOT_APPLICABLE) {
+      $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED;
+    }
+
+    // Get the alias and test to ensure it exists, if it does not then we
+    // really can't do anything.
+    //
+    // Ok, so a quick rant. Pathauto changes out the FieldItem type and
+    // FieldItemList types for the path "field" on the entities. Cool.
+    // Now, the issue is that upon hook_entity_insert() being called,
+    // the path will not have been computed and while the alias may have
+    // just been created, $entity->path->alias will be null. This is
+    // very annoying. So let's instead query the alias storage to get the
+    // alias and call it a day.
+    //
+    // See \Drupal\path\Plugin\Field\FieldType\PathFieldItemList::computeValue.
+    $path = $this->aliasStorage->load([
+      'source' => $owner_source,
+      'langcode' => $langcode,
+    ]);
+
+    return $path;
   }
 
   /**

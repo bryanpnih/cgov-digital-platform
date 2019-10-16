@@ -20,6 +20,13 @@ abstract class AppPathManagerTestBase extends UnitTestCase {
   protected $aliasManager;
 
   /**
+   * Alias storage.
+   *
+   * @var \Drupal\Core\Path\AliasStorageInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $aliasStorage;
+
+  /**
    * The app path manager.
    *
    * @var \Drupal\app_module\AppPathManager
@@ -71,8 +78,9 @@ abstract class AppPathManagerTestBase extends UnitTestCase {
     $this->languageManager = $this->getMock('Drupal\Core\Language\LanguageManagerInterface');
     $this->cache = $this->getMock('Drupal\Core\Cache\CacheBackendInterface');
     $this->aliasManager = $this->getMock('Drupal\Core\Path\AliasManagerInterface');
+    $this->aliasStorage = $this->getMock('Drupal\Core\Path\AliasStorageInterface');
 
-    $this->appPathManager = new AppPathManager($this->aliasManager, $this->appPathStorage, $this->languageManager, $this->cache);
+    $this->appPathManager = new AppPathManager($this->aliasManager, $this->aliasStorage, $this->appPathStorage, $this->languageManager, $this->cache);
 
   }
 

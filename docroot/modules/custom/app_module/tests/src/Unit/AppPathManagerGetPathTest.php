@@ -141,8 +141,17 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
    */
   public function testGetPathByRequestExactMatch() {
     $path = '/' . $this->randomMachineName();
-
     $language = new Language(['id' => 'en']);
+
+    $expected = [
+      'pid' => 3,
+      'owner_pid' => 123,
+      'owner_source' => '/node/22',
+      'owner_alias' => $path,
+      'app_module_id' => 'test_module_id',
+      'app_module_data' => NULL,
+      'langcode' => $language->getId(),
+    ];
 
     // Initialize is called first.
     $this->appPathStorage->expects($this->once())
@@ -160,6 +169,14 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
           ],
         ]
       ));
+
+    $this->appPathStorage->expects($this->exactly(2))
+      ->method('load')
+      ->with([
+        'owner_alias' => $path,
+        'langcode' => $language->getId(),
+      ])
+      ->will($this->returnValue($expected));
 
     // We fetch the language next.
     $this->languageManager->expects($this->any())
@@ -173,9 +190,9 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
       ->with($path, $language->getId())
       ->will($this->returnValue('/node/22'));
 
-    $this->assertEquals($path, $this->appPathManager->getPathByRequest($path));
+    $this->assertEquals($expected, $this->appPathManager->getPathByRequest($path));
     // Call it twice to test the static cache.
-    $this->assertEquals($path, $this->appPathManager->getPathByRequest($path));
+    $this->assertEquals($expected, $this->appPathManager->getPathByRequest($path));
   }
 
   /**
@@ -187,8 +204,17 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
    */
   public function testGetPathByRequestMatch() {
     $path = '/' . $this->randomMachineName();
-
     $language = new Language(['id' => 'en']);
+
+    $expected = [
+      'pid' => 3,
+      'owner_pid' => 123,
+      'owner_source' => '/node/22',
+      'owner_alias' => $path,
+      'app_module_id' => 'test_module_id',
+      'app_module_data' => NULL,
+      'langcode' => $language->getId(),
+    ];
 
     // Initialize is called first.
     $this->appPathStorage->expects($this->once())
@@ -207,6 +233,14 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
         ]
       ));
 
+    $this->appPathStorage->expects($this->exactly(2))
+      ->method('load')
+      ->with([
+        'owner_alias' => $path,
+        'langcode' => $language->getId(),
+      ])
+      ->will($this->returnValue($expected));
+
     // We fetch the language next.
     $this->languageManager->expects($this->any())
       ->method('getCurrentLanguage')
@@ -219,9 +253,9 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
       ->with($path . '/1234', $language->getId())
       ->will($this->returnValue($path . '/1234'));
 
-    $this->assertEquals($path, $this->appPathManager->getPathByRequest($path . '/1234'));
+    $this->assertEquals($expected, $this->appPathManager->getPathByRequest($path . '/1234'));
     // Call it twice to test the static cache.
-    $this->assertEquals($path, $this->appPathManager->getPathByRequest($path . '/1234'));
+    $this->assertEquals($expected, $this->appPathManager->getPathByRequest($path . '/1234'));
   }
 
   /**
@@ -235,31 +269,63 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
 
     $language = new Language(['id' => 'en']);
 
+    $expected1 = [
+      'pid' => 3,
+      'owner_pid' => 123,
+      'owner_source' => '/node/22',
+      'owner_alias' => '/short',
+      'app_module_id' => 'test_module_id',
+      'app_module_data' => NULL,
+      'langcode' => $language->getId(),
+    ];
+
+    $expected2 = [
+      'pid' => 5,
+      'owner_pid' => 456,
+      'owner_source' => '/node/33',
+      'owner_alias' => '/short/then/long',
+      'app_module_id' => 'test_module_id',
+      'app_module_data' => NULL,
+      'langcode' => $language->getId(),
+    ];
+
     // Initialize is called first.
     $this->appPathStorage->expects($this->once())
       ->method('loadAll')
       ->will($this->returnValue(
         [
+          $expected1,
+          $expected2,
+        ]
+      ));
+
+    $this->appPathStorage->expects($this->exactly(2))
+      ->method('load')
+      ->withConsecutive(
+        [
           [
-            'pid' => 3,
-            'owner_pid' => 123,
-            'owner_source' => '/node/22',
             'owner_alias' => '/short',
-            'app_module_id' => 'test_module_id',
-            'app_module_data' => NULL,
             'langcode' => $language->getId(),
           ],
+        ],
+        [
           [
-            'pid' => 5,
-            'owner_pid' => 456,
-            'owner_source' => '/node/33',
             'owner_alias' => '/short/then/long',
-            'app_module_id' => 'test_module_id',
-            'app_module_data' => NULL,
             'langcode' => $language->getId(),
           ],
         ]
-      ));
+      )
+      ->willReturnCallback(
+        function ($conditions) use ($expected1, $expected2) {
+          switch ($conditions['owner_alias']) {
+            case '/short':
+              return $expected1;
+
+            case '/short/then/long':
+              return $expected2;
+          }
+        }
+      );
 
     // We fetch the language next.
     $this->languageManager->expects($this->any())
@@ -279,8 +345,8 @@ class AppPathManagerGetPathTest extends AppPathManagerTestBase {
 
     // Make sure the substring match does not catch a partial word match.
     $this->assertEquals(NULL, $this->appPathManager->getPathByRequest('/shorter'));
-    $this->assertEquals('/short', $this->appPathManager->getPathByRequest('/short/1234'));
-    $this->assertEquals('/short/then/long', $this->appPathManager->getPathByRequest('/short/then/long/1234'));
+    $this->assertEquals($expected1, $this->appPathManager->getPathByRequest('/short/1234'));
+    $this->assertEquals($expected2, $this->appPathManager->getPathByRequest('/short/then/long/1234'));
   }
 
   /* TODO: Test Registration */

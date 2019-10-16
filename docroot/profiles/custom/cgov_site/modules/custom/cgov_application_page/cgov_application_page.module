@@ -18,12 +18,12 @@ function cgov_application_page_entity_insert(EntityInterface $entity) {
     /* New entity then the app path never existed. Register.
      */
     $app_path_svc = \Drupal::service('app_module.app_path_manager');
-    $app_path_svc->registerAppPath($entity);
+    $app_path_svc->updateAppPath($entity);
   }
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update().
+ * Implements hook_entity_update().
  *
  * THIS MUST BE hook_entity NOT hook_ENTITY_TYPE or else pathauto will
  * not fire first.
@@ -34,6 +34,23 @@ function cgov_application_page_entity_update(EntityInterface $entity) {
      * before.
      */
     $app_path_svc = \Drupal::service('app_module.app_path_manager');
-    $app_path_svc->updateAppPathData($entity);
+    $app_path_svc->updateAppPath($entity);
   }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * The insert and update hooks *MUST* come after pathauto.
+ */
+function cgov_application_page_module_implements_alter(&$implementations, $hook) {
+  if ($hook !== 'entity_insert' && $hook !== 'entity_update') {
+    return;
+  }
+
+  // Dutifully copying from the PHP docs to move our implementation
+  // to the end of the list.
+  $group = $implementations['cgov_application_page'];
+  unset($implementations['cgov_application_page']);
+  $implementations['cgov_application_page'] = $group;
 }
