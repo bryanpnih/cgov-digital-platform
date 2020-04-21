@@ -9,17 +9,27 @@
     <div id="cgvBody">
       {{ content.body }}
 
+      {% set infographic_desktop_uri = file_url(content.field_infographic['#items'].entity.uri.value) %}
+      {% set infographic_mobile_uri = null %}
+
+      {% if content.field_infographic_mobile['#items'].entity.uri.value is not empty %}
+        {% set infographic_mobile_uri = file_url(content.field_infographic_mobile['#items'].entity.uri.value) %}
+      {% endif %}
+
       <figure class="image-center-full centered-set">
         <div class="centered-element">
+          
+        {% if infographic_mobile_uri is not empty %}
+          <picture>
+              <source srcset="{{infographic_mobile_uri}}" media="(max-width: 768px)">
+              <source srcset="{{infographic_desktop_uri}}" media="(min-width: 769px)">
+           {{content.field_infographic}}
+          </picture>
+        {% else %}
+          {# if no infographic mobile, just render as an image #}
           {{ content.field_infographic }}
-            {% if content.enlarge_uri|field_value %}
-              <a
-                href="{{- content.enlarge_uri|field_value -}}"
-                target="_blank"
-                class="article-image-enlarge no-resize">
-                {% trans %}Enlarge{% endtrans %}
-              </a>
-            {% endif %}
+        {% endif %}
+
         </div>
       </figure>
 

@@ -150,6 +150,9 @@
     &[data-entity-embed-display*="_large"] {
       width: 75%;
     }
+    &[data-entity-embed-display*="infographic_display_article_large"] {
+      width: 100%;
+    }
   }
 
   /* https://github.com/NCIOCPL/cgov-digital-platform/issues/1575

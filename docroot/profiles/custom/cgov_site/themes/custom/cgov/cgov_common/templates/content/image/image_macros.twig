@@ -51,7 +51,7 @@
   infographic_mobile,
   enlarge_uri,
   caption,
-  link_text = 'Enlarge') %}
+  link_text = 'View and Print Infographic') %}
 
   {# Set up the classes for the figure #}
   {% set attr = create_attribute() %}
@@ -67,8 +67,6 @@
 
 {% if infographic_mobile['#items'].entity.uri.value is not empty %}
   {% set infographic_mobile_uri = file_url(infographic_mobile['#items'].entity.uri.value) %}
-{% else %}
-
 {% endif %}
 
   <figure{{ attr }}>
@@ -83,21 +81,17 @@
           {# if no infographic mobile, just render as an image #}
           {{ infographic_desktop }}
         {% endif %}
-
-         {% if enlarge_uri %}
-          <a href="{{enlarge_uri}}"
-            target="_blank"
-            class="{{classForSpriteSelection}} no-resize"
-          >{{ link_text|trans }}</a>
-        {% endif %} 
       </div>
-      {% if caption|render|striptags|trim %}
         <figcaption>
-          <div class="caption-container no-resize">
-              {{ caption }}
-          </div>
+          {# {% if caption|render|striptags|trim %}
+            <div class="caption-container no-resize">
+                {{ caption }}
+            </div>
+          {% endif %} #}
+          <div class="caption-container">
+            <a href="{{infographic_uri}}" class="infographic-link" target="_blank">{{ link_text|trans }}</a>
+          </div>  
         </figcaption>
-      {% endif %}
   </figure>
 
 {% endmacro %}
