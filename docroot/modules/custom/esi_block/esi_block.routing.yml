@@ -1,0 +1,13 @@
+esi_block.render_block:
+  path: '/block/{block}'
+  defaults:
+    _controller: '\Drupal\esi_block\Controller\EsiBlockController::view'
+    _title: 'render ESI block route'
+  methods: [GET]
+  requirements:
+    _permission: 'access content'
+    block: "[a-zA-Z0-9_-]+"
+  options:
+    parameters:
+      block:
+        type: entity:block
